@@ -21,3 +21,6 @@ Respuesta esperada del backend:
 ```
 
 Abre `index.html` para probarlo o súbelo a un repositorio de GitHub Pages.
+
+
+PUBLICACIÓN: En GitHub sube TODOS los archivos de este ZIP a la misma carpeta que index.html, sustituyendo versiones anteriores. Comprueba que style.css y app.js existen al lado de index.html. En Pages usa Settings > Pages > Deploy from branch > main > /(root). Espera el despliegue y recarga Safari.
