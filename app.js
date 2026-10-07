@@ -1,3 +1,80 @@
+
+// ===== AI NUTRITION LAYER =====
+// GitHub Pages is static: no private API key is embedded here.
+// Set window.GYMTRACK_AI_ENDPOINT to your secure backend endpoint if available.
+// Expected POST JSON: { "query": "...", "quantity": 100, "unit": "g" }
+// Expected response JSON: {name, serving, cal, pro, carb, fat, fiber, confidence}
+window.GYMTRACK_AI_ENDPOINT = window.GYMTRACK_AI_ENDPOINT || "";
+
+function unitLabel(u){
+  return ({g:"g",ml:"ml",portion:"porción",piece:"pieza",cup:"taza",tbsp:"cda",tsp:"cdta",serving:"ración"})[u]||u;
+}
+function normalizeAiFood(x){
+  return {id:"ai"+Date.now(),name:x.name||"Alimento analizado",serving:x.serving||"1 porción",
+    cal:+x.cal||0,pro:+x.pro||0,carb:+x.carb||0,fat:+x.fat||0,fiber:+x.fiber||0};
+}
+function heuristicFood(q){
+  const s=q.toLowerCase();
+  const dict=[
+    {keys:["pechuga","pollo"],name:"Pechuga de pollo",cal:165,pro:31,carb:0,fat:3.6,fiber:0},
+    {keys:["arroz"],name:"Arroz blanco cocido",cal:130,pro:2.7,carb:28,fat:.3,fiber:.4},
+    {keys:["huevo"],name:"Huevo entero",cal:72,pro:6.3,carb:.4,fat:4.8,fiber:0},
+    {keys:["avena"],name:"Avena",cal:389,pro:16.9,carb:66.3,fat:6.9,fiber:10.6},
+    {keys:["platano","plátano"],name:"Plátano",cal:105,pro:1.3,carb:27,fat:.4,fiber:3.1},
+    {keys:["atún","atun"],name:"Atún en agua",cal:116,pro:25.5,carb:0,fat:.8,fiber:0},
+    {keys:["aguacate"],name:"Aguacate",cal:160,pro:2,carb:8.5,fat:14.7,fiber:6.7},
+    {keys:["tortilla"],name:"Tortilla de maíz",cal:52,pro:1.4,carb:10.7,fat:.7,fiber:1.4}
+  ];
+  return dict.find(f=>f.keys.some(k=>s.includes(k)));
+}
+function scaleFood(f, qty, unit){
+  const factors={g:qty/100,ml:qty/100,portion:qty,piece:qty,cup:qty,tbsp:qty/16,tsp:qty/48,serving:qty};
+  const k=factors[unit]||1;
+  return {...f,id:"ai"+Date.now(),serving:`${qty} ${unitLabel(unit)}`,cal:f.cal*k,pro:f.pro*k,carb:f.carb*k,fat:f.fat*k,fiber:f.fiber*k};
+}
+async function askFoodAI(){
+  const q=document.getElementById("foodSearch").value.trim();
+  if(!q)return toast("Escribe un alimento o platillo");
+  const unit=document.getElementById("foodUnit").value;
+  const qty=+document.getElementById("foodQty").value||1;
+  const box=document.getElementById("aiResult");
+  box.innerHTML='<div class="ai-result"><span class="muted">✦ Analizando macros...</span></div>';
+  let food=null, source="estimación local";
+  if(window.GYMTRACK_AI_ENDPOINT){
+    try{
+      const r=await fetch(window.GYMTRACK_AI_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q,quantity:qty,unit})});
+      if(!r.ok)throw new Error("AI endpoint");
+      food=normalizeAiFood(await r.json()); source="IA";
+    }catch(e){console.warn(e)}
+  }
+  if(!food){
+    const h=heuristicFood(q);
+    if(h) food=scaleFood(h,qty,unit);
+    else {
+      const found=allFoods().find(f=>f.name.toLowerCase().includes(q.toLowerCase()));
+      if(found) food=scaleFood(found,qty,unit);
+    }
+  }
+  if(!food){
+    box.innerHTML='<div class="ai-result"><strong>No pude identificarlo con suficiente precisión.</strong><p class="muted small">Puedes crear el alimento manualmente o conectar un endpoint de IA para analizar platillos.</p></div>';
+    return;
+  }
+  box.innerHTML=`<div class="ai-result">
+    <div class="row"><div><strong>✦ ${food.name}</strong><div class="small muted">${food.serving} · ${source}</div></div><button class="primary" onclick='addAnalyzedFood(${JSON.stringify(food)})'>Agregar</button></div>
+    <div class="ai-result-grid">
+      <div class="ai-stat"><b>${food.cal.toFixed(0)}</b><span>kcal</span></div>
+      <div class="ai-stat"><b>${food.pro.toFixed(1)} g</b><span>proteína</span></div>
+      <div class="ai-stat"><b>${food.carb.toFixed(1)} g</b><span>carbohidratos</span></div>
+      <div class="ai-stat"><b>${food.fat.toFixed(1)} g</b><span>grasas</span></div>
+      <div class="ai-stat"><b>${food.fiber.toFixed(1)} g</b><span>fibra</span></div>
+    </div>
+  </div>`;
+}
+function addAnalyzedFood(f){
+  let meal=prompt("¿En qué comida? Desayuno, Comida, Cena, Colación, Pre-entreno o Post-entreno","Comida")||"Comida";
+  let d=getDay();d.items.push({...f,uid:Date.now(),meal});data.logs[todayKey()]=d;save();renderNutrition();toast("Platillo agregado");
+}
+
 const KEY="gymtrack_v1";
 const baseFoods=[
 ["Pechuga de pollo","100 g",165,31,0,3.6,0],["Huevo entero","1 pieza",72,6.3,.4,4.8,0],

@@ -21,11 +21,16 @@
 <section id="nutrition" class="view active">
 <div class="row" style="margin-bottom:10px"><div><h2 style="margin:0">Hoy</h2><span class="muted small" id="today"></span></div><button class="ghost" onclick="resetDay()">Reiniciar día</button></div>
 <div class="grid cards" id="macroCards"></div>
-<div class="card section">
-<h3>🔎 Buscar alimento o platillo</h3>
-<div class="search"><input id="foodSearch" placeholder="Ej. pollo, arroz, huevo, tacos..." oninput="searchFoods()"><button onclick="searchFoods()">Buscar</button></div>
+<div class="card section ai-card">
+<div class="ai-head"><div><span class="ai-badge">✦ IA NUTRICIONAL</span><h3>¿Qué comiste?</h3><p class="muted small">Escribe el producto o platillo y la IA estimará sus macros y una porción inicial.</p></div><span class="ai-orb">✦</span></div>
+<div class="ai-search"><input id="foodSearch" placeholder="Ej. 2 tacos al pastor, 250 g pollo, licuado de plátano..." oninput="searchFoods()"><button onclick="askFoodAI()">Analizar</button></div>
+<div class="unit-row">
+<label>Unidad <select id="foodUnit"><option value="g">Gramos (g)</option><option value="ml">Mililitros (ml)</option><option value="portion">Porción</option><option value="piece">Pieza</option><option value="cup">Taza</option><option value="tbsp">Cucharada</option><option value="tsp">Cucharadita</option><option value="serving">Ración</option></select></label>
+<label>Cantidad <input id="foodQty" type="number" min="0.1" step="0.1" value="100"></label>
+</div>
+<div id="aiResult"></div>
 <div class="results" id="foodResults"></div>
-<div class="row" style="margin-top:10px"><span class="muted small">¿No aparece? Crea tu propio alimento o platillo.</span><button class="primary" onclick="openFoodModal()">＋ Crear alimento</button></div>
+<div class="row" style="margin-top:12px"><span class="muted small">También puedes usar tus alimentos personalizados.</span><button class="ghost" onclick="openFoodModal()">＋ Crear alimento</button></div>
 </div>
 <div class="section" id="meals"></div>
 </section>
