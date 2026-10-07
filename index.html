@@ -3,91 +3,91 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
-<title>GymTrack — Macros & Entrenamiento</title>
+<meta name="theme-color" content="#050705">
+<title>GymTrack — Smart Fitness</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="ambient a1"></div><div class="ambient a2"></div>
 <div class="app">
-<header><div class="brand"><h1>🏋️ GymTrack</h1><p>Macros, comidas y progreso de entrenamiento</p></div><button class="iconbtn" onclick="openSettings()">⚙️</button></header>
+<header class="topbar">
+  <div class="logo"><div class="logo-mark">G</div><div><b>GYMTRACK</b><span>SMART FITNESS</span></div></div>
+  <button class="round" onclick="openSettings()">⚙</button>
+</header>
 
-<nav class="tabs">
-<button class="tab active" data-tab="nutrition">🥗 Nutrición</button>
-<button class="tab" data-tab="training">🏋️ Entrenamiento</button>
-<button class="tab" data-tab="history">📈 Progreso</button>
-<button class="tab" data-tab="settings">⚙️ Ajustes</button>
+<main>
+<section id="dashboard" class="screen active">
+  <div class="hero row">
+    <div><span class="eyebrow">TU DÍA</span><h1 id="dateTitle">Hoy</h1><p id="dateSub" class="muted"></p></div>
+    <button class="pill green" onclick="resetDay()">↻ Reiniciar</button>
+  </div>
+
+  <div class="hero-glass">
+    <div class="ring" id="calRing"><div><strong id="calValue">0</strong><span>kcal</span></div></div>
+    <div class="hero-copy"><span class="eyebrow">CALORÍAS</span><h2><span id="calGoal">2500</span> kcal objetivo</h2><p id="calRemain">Te quedan 2500 kcal</p></div>
+  </div>
+
+  <div class="macro-grid" id="macroGrid"></div>
+
+  <div class="section-head"><div><span class="eyebrow">NUTRICIÓN</span><h2>Agregar comida</h2></div></div>
+  <div class="ai-panel">
+    <div class="ai-title"><div class="spark">✦</div><div><b>NutriAI</b><span>Analiza lo que comiste</span></div><span class="online">● LISTO</span></div>
+    <div class="ai-input-wrap"><input id="aiQuery" placeholder="Ej. 3 tacos de bistec con queso y salsa"><button onclick="analyzeFood()">Analizar</button></div>
+    <div class="ai-controls">
+      <label>Cantidad<input id="aiQty" type="number" value="1" min=".1" step=".1"></label>
+      <label>Unidad<select id="aiUnit"><option value="portion">Porción</option><option value="g">Gramos</option><option value="ml">Mililitros</option><option value="piece">Pieza</option><option value="cup">Taza</option><option value="tbsp">Cucharada</option><option value="tsp">Cucharadita</option></select></label>
+      <label>Comida<select id="aiMeal"><option>Desayuno</option><option>Colación</option><option selected>Comida</option><option>Pre-entreno</option><option>Post-entreno</option><option>Cena</option></select></label>
+    </div>
+    <div id="aiOutput"></div>
+  </div>
+
+  <div class="section-head"><div><span class="eyebrow">REGISTRO</span><h2>Mis comidas</h2></div><button class="round small" onclick="openFoodModal()">＋</button></div>
+  <div id="mealList"></div>
+</section>
+
+<section id="training" class="screen">
+  <div class="hero"><span class="eyebrow">ENTRENAMIENTO</span><h1>Tu sesión</h1><p class="muted">Registra cada serie y compara tu rendimiento.</p></div>
+  <div class="glass-card">
+    <div class="form-grid">
+      <label>Nombre<input id="workoutName" value="Entrenamiento"></label>
+      <label>Duración<input id="workoutDuration" type="number" placeholder="60"></label>
+    </div>
+    <div class="exercise-add">
+      <select id="exerciseSelect"></select><input id="exWeight" type="number" placeholder="kg" step=".5"><input id="exReps" type="number" placeholder="reps" value="10"><button onclick="addExercise()">＋</button>
+    </div>
+    <div id="workoutRows"></div>
+    <button class="wide green-btn" onclick="finishWorkout()">✓ FINALIZAR SESIÓN</button>
+  </div>
+  <div id="sessionResult"></div>
+  <div class="section-head"><div><span class="eyebrow">EJERCICIOS</span><h2>Biblioteca</h2></div><button class="round small" onclick="openExerciseModal()">＋</button></div>
+  <div id="exerciseLibrary" class="library"></div>
+</section>
+
+<section id="progress" class="screen">
+  <div class="hero"><span class="eyebrow">PROGRESO</span><h1>Tu evolución</h1><p class="muted">Cada entrenamiento cuenta.</p></div>
+  <div id="progressSummary" class="progress-summary"></div>
+  <div id="historyList"></div>
+</section>
+
+<section id="settings" class="screen">
+  <div class="hero"><span class="eyebrow">CONFIGURACIÓN</span><h1>Objetivos</h1><p class="muted">Ajusta tus metas diarias.</p></div>
+  <div class="glass-card"><div class="form-grid" id="goalForm"></div><button class="wide green-btn" onclick="saveGoals()">GUARDAR OBJETIVOS</button></div>
+  <div class="glass-card"><h3>Conexión NutriAI</h3><p class="muted small">GitHub Pages no puede ocultar una clave de API. Introduce aquí la URL de tu backend seguro para usar IA real.</p><input id="aiEndpoint" class="full-input" placeholder="https://tu-backend.com/api/food"><button class="wide" onclick="saveEndpoint()">Guardar conexión</button><p id="endpointStatus" class="small muted"></p></div>
+  <div class="glass-card"><h3>Datos</h3><button class="wide" onclick="exportData()">Exportar respaldo JSON</button><button class="wide danger-btn" onclick="clearAll()">Borrar todos los datos</button></div>
+</section>
+</main>
+
+<nav class="bottom-nav">
+<button class="nav active" data-screen="dashboard">⌂<span>Inicio</span></button>
+<button class="nav" data-screen="training">♢<span>Entreno</span></button>
+<button class="nav" data-screen="progress">↗<span>Progreso</span></button>
+<button class="nav" data-screen="settings">⚙<span>Ajustes</span></button>
 </nav>
-
-<section id="nutrition" class="view active">
-<div class="row" style="margin-bottom:10px"><div><h2 style="margin:0">Hoy</h2><span class="muted small" id="today"></span></div><button class="ghost" onclick="resetDay()">Reiniciar día</button></div>
-<div class="grid cards" id="macroCards"></div>
-<div class="card section ai-card">
-<div class="ai-head"><div><span class="ai-badge">✦ IA NUTRICIONAL</span><h3>¿Qué comiste?</h3><p class="muted small">Escribe el producto o platillo y la IA estimará sus macros y una porción inicial.</p></div><span class="ai-orb">✦</span></div>
-<div class="ai-search"><input id="foodSearch" placeholder="Ej. 2 tacos al pastor, 250 g pollo, licuado de plátano..." oninput="searchFoods()"><button onclick="askFoodAI()">Analizar</button></div>
-<div class="unit-row">
-<label>Unidad <select id="foodUnit"><option value="g">Gramos (g)</option><option value="ml">Mililitros (ml)</option><option value="portion">Porción</option><option value="piece">Pieza</option><option value="cup">Taza</option><option value="tbsp">Cucharada</option><option value="tsp">Cucharadita</option><option value="serving">Ración</option></select></label>
-<label>Cantidad <input id="foodQty" type="number" min="0.1" step="0.1" value="100"></label>
-</div>
-<div id="aiResult"></div>
-<div class="results" id="foodResults"></div>
-<div class="row" style="margin-top:12px"><span class="muted small">También puedes usar tus alimentos personalizados.</span><button class="ghost" onclick="openFoodModal()">＋ Crear alimento</button></div>
-</div>
-<div class="section" id="meals"></div>
-</section>
-
-<section id="training" class="view">
-<div class="row"><div><h2 style="margin:0">Entrenamiento</h2><span class="muted small">Registra y compara tus sesiones.</span></div><button class="primary" onclick="openExerciseModal()">＋ Nuevo ejercicio</button></div>
-<div class="card section">
-<div class="formgrid">
-<div class="field"><label>Nombre de la sesión</label><input id="workoutName" placeholder="Ej. Pecho y tríceps"></div>
-<div class="field"><label>Fecha</label><input id="workoutDate" type="date"></div>
-<div class="field"><label>Duración (min)</label><input id="workoutDuration" type="number" min="0" placeholder="60"></div>
-<div class="field"><label>Notas</label><input id="workoutNotes" placeholder="Energía, sensaciones..."></div>
-</div>
-</div>
-<div class="card section">
-<h3>Ejercicios de hoy</h3>
-<div class="exercise-builder">
-<div class="field"><label>Ejercicio</label><select id="exerciseSelect"></select></div>
-<div class="field"><label>Series</label><input id="sets" type="number" min="1" value="3"></div>
-<div class="field"><label>Reps</label><input id="reps" type="number" min="1" value="10"></div>
-<div class="field"><label>Peso (kg)</label><input id="weight" type="number" min="0" step=".5" value="0"></div>
-<button class="primary" onclick="addExerciseToWorkout()">Agregar</button>
-</div>
-<div id="workoutExercises" class="section"></div>
-<button class="primary" style="width:100%;margin-top:12px" onclick="finishWorkout()">✓ Finalizar entrenamiento y comparar</button>
-</div>
-<div id="lastComparison" class="section"></div>
-</section>
-
-<section id="history" class="view">
-<h2 style="margin:0">Progreso</h2><p class="muted">Aquí podrás ver tus entrenamientos terminados y si mejoraste.</p>
-<div id="historyList"></div>
-</section>
-
-<section id="settings" class="view">
-<div class="card"><h2 style="margin-top:0">🎯 Objetivos diarios</h2><div class="formgrid" id="goalForm"></div><button class="primary" style="margin-top:12px" onclick="saveGoals()">Guardar objetivos</button></div>
-<div class="card section"><h3>Datos</h3><button class="ghost" onclick="exportData()">Exportar respaldo</button> <button class="danger" onclick="clearAll()">Borrar todos los datos</button></div>
-</section>
 </div>
 
-<div class="modal" id="foodModal"><div class="sheet"><div class="row"><h2>Crear alimento</h2><button class="iconbtn" onclick="closeModal('foodModal')">✕</button></div>
-<div class="formgrid">
-<div class="field" style="grid-column:1/-1"><label>Nombre</label><input id="fName" placeholder="Ej. Mi licuado"></div>
-<div class="field"><label>Porción</label><input id="fServing" value="100 g"></div>
-<div class="field"><label>Calorías</label><input id="fCal" type="number"></div>
-<div class="field"><label>Proteína (g)</label><input id="fPro" type="number" step=".1"></div>
-<div class="field"><label>Carbohidratos (g)</label><input id="fCarb" type="number" step=".1"></div>
-<div class="field"><label>Grasas (g)</label><input id="fFat" type="number" step=".1"></div>
-<div class="field"><label>Fibra (g)</label><input id="fFiber" type="number" step=".1" value="0"></div>
-</div><button class="primary" style="width:100%;margin-top:14px" onclick="saveFood()">Guardar alimento</button></div></div>
-
-<div class="modal" id="exerciseModal"><div class="sheet"><div class="row"><h2>Nuevo ejercicio</h2><button class="iconbtn" onclick="closeModal('exerciseModal')">✕</button></div>
-<div class="field"><label>Nombre del ejercicio</label><input id="eName" placeholder="Ej. Press inclinado con mancuernas"></div>
-<div class="field" style="margin-top:10px"><label>Músculo / grupo</label><input id="eMuscle" placeholder="Pecho"></div>
-<button class="primary" style="width:100%;margin-top:14px" onclick="saveExercise()">Agregar ejercicio</button></div></div>
+<div id="modal" class="modal"><div class="modal-box"><button class="modal-close" onclick="closeModal()">×</button><div id="modalContent"></div></div></div>
+<div id="quantityModal" class="modal"><div class="modal-box quantity-box"><button class="modal-close" onclick="closeQuantityModal()">×</button><div id="quantityContent"></div></div></div>
 <div id="toast" class="toast"></div>
-
 <script src="app.js"></script>
 </body>
 </html>

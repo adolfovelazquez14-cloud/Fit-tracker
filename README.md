@@ -1,16 +1,38 @@
-# GymTrack — Macros & Entrenamiento
+# GymTrack v2
 
-App web móvil para nutrición y entrenamiento.
+## Qué cambió
+- Interfaz nueva estilo Liquid Glass, negro/blanco/verde.
+- Dashboard móvil con anillo de calorías y macros.
+- NutriAI con cantidades y unidades: gramos, ml, porción, pieza, taza, cucharada y cucharadita.
+- Registro de comidas.
+- Entrenamiento con peso/repeticiones y comparación.
+- Historial y progreso.
+- Datos guardados en `localStorage`.
 
-## Archivos
-- `index.html` — interfaz
-- `style.css` — Liquid Glass
-- `app.js` — lógica de macros, alimentos, entrenamientos e IA
+## IA real
+GitHub Pages solo sirve archivos estáticos. Para que NutriAI analice cualquier platillo con un modelo de IA necesitas un backend seguro.
 
-## GitHub Pages
-Sube los 4 archivos a la raíz del repositorio y activa **Settings → Pages → Deploy from a branch → main → / (root)**.
+La app acepta un endpoint en **Ajustes → Conexión NutriAI**.
 
-## IA nutricional
-La interfaz incluye un analizador de alimentos preparado para un endpoint seguro. **No pongas una API key de OpenAI dentro de `app.js` ni en GitHub Pages.** Configura `window.GYMTRACK_AI_ENDPOINT` para apuntar a tu backend seguro.
+El frontend envía:
+```json
+{"query":"3 tacos de bistec con queso","quantity":1,"unit":"portion"}
+```
 
-Sin endpoint, la app funciona con una estimación local para alimentos conocidos y con los alimentos guardados por el usuario.
+El backend debe devolver:
+```json
+{
+  "name":"Tacos de bistec con queso",
+  "serving":"1 porción",
+  "cal":650,
+  "pro":38,
+  "carb":55,
+  "fat":28,
+  "fiber":5
+}
+```
+
+**No coloques una API key de OpenAI en `index.html` o `app.js`.** Si quieres IA real, usa un Worker/Function con la clave como secreto.
+
+## Selector de cantidad
+Al seleccionar un alimento/resultado de NutriAI, se abre una ventana donde eliges cantidad y unidad. Los macros se recalculan en tiempo real antes de confirmar.
