@@ -1,146 +1,61 @@
-const KEY="gymtrack_v2";
+const KEY="gymtrack_v3";
 const foods=[
-["Pechuga de pollo","100 g",165,31,0,3.6,0],["Arroz blanco cocido","100 g",130,2.7,28,.3,.4],["Huevo entero","1 pieza",72,6.3,.4,4.8,0],
-["Avena","100 g",389,16.9,66.3,6.9,10.6],["Plátano","1 pieza",105,1.3,27,.4,3.1],["Atún en agua","100 g",116,25.5,0,.8,0],
-["Aguacate","100 g",160,2,8.5,14.7,6.7],["Tortilla de maíz","1 pieza",52,1.4,10.7,.7,1.4],["Frijoles cocidos","100 g",127,8.7,22.8,.5,7.4],
-["Yogur griego natural","100 g",59,10.3,3.6,.4,0],["Leche descremada","250 ml",90,8.5,12.5,0,0],["Pan integral","2 rebanadas",140,6,24,2,4],
-["Proteína whey","1 scoop",120,24,3,2,0],["Salmón","100 g",208,20,0,13,0],["Carne de res magra","100 g",217,26,0,12,0]
+["Pechuga de pollo","100 g",165,31,0,3.6,0],["Arroz blanco cocido","100 g",130,2.7,28,.3,.4],["Huevo entero","1 pieza",72,6.3,.4,4.8,0],["Avena","100 g",389,16.9,66.3,6.9,10.6],["Plátano","1 pieza",105,1.3,27,.4,3.1],["Atún en agua","100 g",116,25.5,0,.8,0],["Aguacate","100 g",160,2,8.5,14.7,6.7],["Tortilla de maíz","1 pieza",52,1.4,10.7,.7,1.4],["Frijoles cocidos","100 g",127,8.7,22.8,.5,7.4],["Yogur griego natural","100 g",59,10.3,3.6,.4,0],["Leche descremada","250 ml",90,8.5,12.5,0,0],["Pan integral","2 rebanadas",140,6,24,2,4],["Proteína whey","1 scoop",120,24,3,2,0],["Salmón","100 g",208,20,0,13,0],["Carne de res magra","100 g",217,26,0,12,0],["Papa cocida","100 g",87,1.9,20.1,.1,1.8],["Pasta cocida","100 g",158,5.8,30.9,.9,1.8],["Queso panela","100 g",198,21,3,12,0],["Manzana","1 pieza",95,.5,25,.3,4.4],["Naranja","1 pieza",62,1.2,15.4,.2,3.1],["Fresas","100 g",32,.7,7.7,.3,2],["Mango","100 g",60,.8,15,.4,1.6],["Almendras","30 g",174,6.4,6.1,15,3.5],["Crema de cacahuate","32 g",188,7.7,7,16,1.9],["Aceite de oliva","1 cucharada",119,0,0,13.5,0],["Lechuga","100 g",15,1.4,2.9,.2,1.3],["Tomate","100 g",18,.9,3.9,.2,1.2],["Brócoli","100 g",35,2.4,7.2,.4,3.3]
 ].map((x,i)=>({id:"b"+i,name:x[0],serving:x[1],cal:x[2],pro:x[3],carb:x[4],fat:x[5],fiber:x[6]}));
 const defaultExercises=[["Press de banca","Pecho"],["Sentadilla","Pierna"],["Peso muerto","Espalda"],["Remo con barra","Espalda"],["Press militar","Hombro"],["Curl de bíceps","Bíceps"],["Extensión de tríceps","Tríceps"]].map((x,i)=>({id:"e"+i,name:x[0],muscle:x[1]}));
 let data=JSON.parse(localStorage.getItem(KEY)||"null")||{goals:{cal:2500,pro:180,carb:280,fat:70},foods:[],logs:{},exercises:defaultExercises,workouts:[],endpoint:""};
-let workout=[];
-const today=()=>new Date().toISOString().slice(0,10);
-const save=()=>localStorage.setItem(KEY,JSON.stringify(data));
-const day=()=>data.logs[today()]||{items:[]};
-function toast(t){const x=document.getElementById("toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),1800)}
-function allFoods(){return foods.concat(data.foods)}
-function totals(){return day().items.reduce((a,x)=>{for(const k of ["cal","pro","carb","fat"])a[k]+=+x[k]||0;return a},{cal:0,pro:0,carb:0,fat:0})}
+if(!data.goals) data.goals={cal:2500,pro:180,carb:280,fat:70}; if(!data.logs)data.logs={}; if(!data.foods)data.foods=[]; if(!data.exercises)data.exercises=defaultExercises;if(!data.workouts)data.workouts=[];
+let workout=[],pendingFood=null;
+const today=()=>new Date().toISOString().slice(0,10), save=()=>localStorage.setItem(KEY,JSON.stringify(data)), day=()=>data.logs[today()]||{items:[]};
+const allFoods=()=>foods.concat(data.foods), toast=t=>{const x=document.getElementById("toast");x.textContent=t;x.classList.add("show");setTimeout(()=>x.classList.remove("show"),1800)};
+function totals(){return day().items.reduce((a,x)=>{for(const k of ["cal","pro","carb","fat","fiber"])a[k]+=+x[k]||0;return a},{cal:0,pro:0,carb:0,fat:0,fiber:0})}
 function pct(v,g){return Math.min(100,Math.round(v/(g||1)*100))}
+function showScreen(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.screen===id));if(id==="training")renderTraining();if(id==="progress")renderProgress();if(id==="settings")renderSettings();if(id==="ai")renderAIDashboard()}
 document.querySelectorAll(".nav").forEach(n=>n.onclick=()=>showScreen(n.dataset.screen));
-function showScreen(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.screen===id));if(id==="training")renderTraining();if(id==="progress")renderProgress();if(id==="settings")renderSettings()}
-function renderDashboard(){
- const t=totals(), deg=Math.min(360,t.cal/data.goals.cal*360);calValue.textContent=Math.round(t.cal);calGoal.textContent=data.goals.cal;calRemain.textContent=t.cal>=data.goals.cal?"Objetivo alcanzado":`Te quedan ${Math.max(0,Math.round(data.goals.cal-t.cal))} kcal`;
- calRing.style.background=`conic-gradient(#35ee83 ${deg}deg,#35ee8320 ${deg}deg)`;
- const defs=[["Proteína","pro","g"],["Carbohidratos","carb","g"],["Grasas","fat","g"]];
- macroGrid.innerHTML=defs.map(([n,k,u])=>`<div class="macro"><span class="name">${n}</span><b>${t[k].toFixed(1)} <small class="muted">/ ${data.goals[k]}${u}</small></b><div class="track"><i style="width:${pct(t[k],data.goals[k])}%"></i></div></div>`).join("");
- const d=new Date();dateTitle.textContent=d.toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"});dateSub.textContent="Tu resumen nutricional de hoy";
- renderMeals();
-}
+function renderDashboard(){const t=totals(),deg=Math.min(360,t.cal/data.goals.cal*360);calValue.textContent=Math.round(t.cal);calGoal.textContent=data.goals.cal;calRemain.textContent=t.cal>=data.goals.cal?"Objetivo alcanzado":`Te quedan ${Math.max(0,Math.round(data.goals.cal-t.cal))} kcal`;calRing.style.background=`conic-gradient(var(--green) ${deg}deg,#dfeee5 ${deg}deg)`;macroGrid.innerHTML=[["Proteína","pro","g"],["Carbohidratos","carb","g"],["Grasas","fat","g"],["Fibra","fiber","g"]].map(([n,k,u])=>`<div class="macro"><span class="name">${n}</span><b>${t[k].toFixed(1)} <small class="muted">/ ${data.goals[k]||"—"}${u}</small></b><div class="track"><i style="width:${pct(t[k],data.goals[k]||1)}%"></i></div></div>`).join("");const d=new Date();dateTitle.textContent=d.toLocaleDateString("es-MX",{weekday:"long",day:"numeric",month:"long"});dateSub.textContent="Tu resumen nutricional de hoy";renderMeals()}
 function renderMeals(){const meals=["Desayuno","Colación","Comida","Pre-entreno","Post-entreno","Cena"];mealList.innerHTML=meals.map(m=>{const items=day().items.filter(x=>x.meal===m);if(!items.length)return "";return `<div class="meal-card"><div class="meal-title"><b>${m}</b><span class="muted small">${Math.round(items.reduce((a,x)=>a+x.cal,0))} kcal</span></div>${items.map(x=>`<div class="food-row"><div><strong>${x.name}</strong><small>${x.serving} · P ${x.pro.toFixed(1)}g · C ${x.carb.toFixed(1)}g · G ${x.fat.toFixed(1)}g</small></div><button class="delete" onclick="removeFood('${x.uid}')">×</button></div>`).join("")}</div>`}).join("")||`<div class="glass-card muted">Todavía no has agregado alimentos.</div>`}
-function removeFood(uid){const d=day();d.items=d.items.filter(x=>String(x.uid)!==String(uid));data.logs[today()]=d;save();renderDashboard()}
-function unitFactor(unit,qty){return ({g:qty/100,ml:qty/100,portion:qty,piece:qty,cup:qty,tbsp:qty/16,tsp:qty/48})[unit]||1}
-function unitName(u){return ({g:"g",ml:"ml",portion:"porción",piece:"pieza",cup:"taza",tbsp:"cda",tsp:"cdta"})[u]||u}
-function matchFood(q){q=q.toLowerCase();return allFoods().find(f=>f.name.toLowerCase().split(" ").some(w=>w.length>2&&q.includes(w)))}
-function estimateLocal(q,qty,unit){
- let f=matchFood(q);
- const patterns=[
-  {r:/\b(\d+)\s*tacos?\b/i,base:"Tortilla de maíz",mult:m=>m*3},
-  {r:/\b(\d+)\s*huevos?\b/i,base:"Huevo entero",mult:m=>m},
-  {r:/\b(\d+)\s*(?:scoop|medidas?)\b/i,base:"Proteína whey",mult:m=>m}
- ];
- for(const p of patterns){const m=q.match(p.r);if(m){f=allFoods().find(x=>x.name===p.base);qty=p.mult(+m[1]);unit="portion";break}}
- if(!f)return null;const k=unitFactor(unit,qty);return {...f,id:"ai"+Date.now(),serving:`${qty} ${unitName(unit)}`,cal:f.cal*k,pro:f.pro*k,carb:f.carb*k,fat:f.fat*k,fiber:f.fiber*k};
-}
-async function analyzeFood(){
- const q=aiQuery.value.trim();if(!q)return toast("Escribe qué comiste");
- aiOutput.innerHTML='<div class="ai-result">✦ Analizando…</div>';
- let result=null,source="estimación local";
- if(data.endpoint){
-  try{const r=await fetch(data.endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q,quantity:+aiQty.value||1,unit:aiUnit.value})});if(!r.ok)throw Error();result=await r.json();source="IA real"}catch(e){console.warn(e)}
- }
- if(!result)result=estimateLocal(q,+aiQty.value||1,aiUnit.value);
- if(!result){aiOutput.innerHTML='<div class="ai-result"><b>No pude identificar el platillo.</b><p class="muted small">Conecta tu backend de IA en Ajustes para analizar platillos libres como “chilaquiles con pollo y crema”.</p></div>';return}
- result={...result,id:"ai"+Date.now()};
- aiOutput.innerHTML=`<div class="ai-result"><div class="row"><div><b>✦ ${result.name}</b><div class="muted small">${result.serving} · ${source}</div></div><button class="pill green" onclick='openQuantityModal(${JSON.stringify(result)})'>Agregar</button></div><div class="result-stats"><div class="stat"><b>${Math.round(result.cal)}</b><span>kcal</span></div><div class="stat"><b>${result.pro.toFixed(1)}g</b><span>proteína</span></div><div class="stat"><b>${result.carb.toFixed(1)}g</b><span>carbohidratos</span></div><div class="stat"><b>${result.fat.toFixed(1)}g</b><span>grasas</span></div></div></div>`;
-}
-let pendingFood=null;
-function openQuantityModal(food){
-  pendingFood={...food};
-  const defaultQty=food.serving?parseFloat(food.serving):1;
-  const inferredUnit=(food.serving||"").includes("g")?"g":(food.serving||"").includes("ml")?"ml":"portion";
-  quantityModal.classList.add("show");
-  renderQuantityModal(defaultQty||1,inferredUnit);
-}
+function removeFood(uid){const d=day();d.items=d.items.filter(x=>String(x.uid)!==String(uid));data.logs[today()]=d;save();renderDashboard();renderAIDashboard()}
+function parseServing(s){const m=String(s||"").match(/([\d.]+)\s*(g|ml|pieza|porción|portion|taza|cda|cdta|scoop|rebanadas?)/i);return m?{qty:+m[1],unit:m[2].toLowerCase()}:null}
+function inferredUnit(s){const p=parseServing(s);if(!p)return"portion";if(p.unit==="g")return"g";if(p.unit==="ml")return"ml";if(p.unit==="pieza")return"piece";if(p.unit==="taza")return"cup";if(p.unit==="cda")return"tbsp";if(p.unit==="cdta")return"tsp";return"portion"}
+function factorFor(food,qty,unit){const base=parseServing(food.serving);if(!base)return qty;const unitBase={g:100,ml:100,piece:1,portion:1,cup:1,tbsp:1,tsp:1};if(base.unit==="g"||base.unit==="ml"){if(unit===base.unit)return qty/100; if(unit==="portion")return qty*(base.qty/100); return qty/100}if(base.unit==="pieza")return unit==="piece"?qty:qty;if(base.unit==="taza")return unit==="cup"?qty:qty;if(base.unit==="cda")return unit==="tbsp"?qty:qty/16;if(base.unit==="cdta")return unit==="tsp"?qty:qty/48;return qty/base.qty}
+function unitName(u){return({g:"g",ml:"ml",portion:"porción",piece:"pieza",cup:"taza",tbsp:"cda",tsp:"cdta"})[u]||u}
+function matchFood(q){q=q.toLowerCase();return allFoods().find(f=>f.name.toLowerCase().split(" ").some(w=>w.length>2&&q.includes(w)))||allFoods().find(f=>q.includes(f.name.toLowerCase()))}
+function estimateLocal(q,qty=1,unit="portion"){let text=q.toLowerCase(),f=matchFood(q);const patterns=[[/\b(\d+)\s*tacos?\b/i,"Tortilla de maíz",m=>+m[1]*3],[/\b(\d+)\s*huevos?\b/i,"Huevo entero",m=>+m[1]],[/\b(\d+)\s*(?:scoop|medidas?)\b/i,"Proteína whey",m=>+m[1]],[/\b(\d+)\s*plátanos?\b/i,"Plátano",m=>+m[1]],[/\b(\d+)\s*manzanas?\b/i,"Manzana",m=>+m[1]]];for(const [r,n,fn] of patterns){const m=text.match(r);if(m){f=allFoods().find(x=>x.name===n);qty=fn(m);unit="portion";break}}if(!f)return null;const k=factorFor(f,+qty||1,unit);return {...f,id:"ai"+Date.now(),cal:f.cal*k,pro:f.pro*k,carb:f.carb*k,fat:f.fat*k,fiber:f.fiber*k,serving:`${qty} ${unitName(unit)}`}}
+async function analyzeFood(){const q=aiQuery.value.trim();if(!q)return toast("Escribe qué comiste");aiOutput.innerHTML='<div class="ai-result">✦ Analizando tu comida…</div>';let result=null,source="análisis local";if(data.endpoint){try{const r=await fetch(data.endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({query:q,context:{goals:data.goals,today:totals()}})});if(!r.ok)throw Error();result=await r.json();source="IA conectada"}catch(e){console.warn(e)}}if(!result)result=estimateLocal(q);if(!result){aiOutput.innerHTML=`<div class="ai-result"><b>No pude identificar esa comida.</b><p class="muted small">Prueba con ingredientes y cantidades, por ejemplo: “200 g de pollo con 150 g de arroz y aguacate”. Conecta una IA real en Ajustes para interpretar platillos más complejos.</p></div>`;return}renderAIResult(result,source)}
+function renderAIResult(r,source){r={...r,id:r.id||"ai"+Date.now()};const t=totals();const remaining={cal:Math.max(0,data.goals.cal-t.cal),pro:Math.max(0,data.goals.pro-t.pro),carb:Math.max(0,data.goals.carb-t.carb),fat:Math.max(0,data.goals.fat-t.fat)};aiOutput.innerHTML=`<div class="ai-result"><div class="row"><div><b>✦ ${r.name}</b><div class="muted small">${r.serving||"Porción estimada"} · ${source}</div></div></div><div class="result-stats"><div class="stat"><b>${Math.round(r.cal)}</b><span>kcal</span></div><div class="stat"><b>${(+r.pro||0).toFixed(1)}g</b><span>proteína</span></div><div class="stat"><b>${(+r.carb||0).toFixed(1)}g</b><span>carbohidratos</span></div><div class="stat"><b>${(+r.fat||0).toFixed(1)}g</b><span>grasas</span></div></div><p class="small"><b>Lectura de NutriAI:</b> esta entrada aporta aproximadamente ${Math.round(r.cal)} kcal y ${(+r.pro||0).toFixed(1)} g de proteína. Te quedarían ${Math.round(remaining.cal)} kcal, ${remaining.pro.toFixed(1)} g de proteína, ${remaining.carb.toFixed(1)} g de carbohidratos y ${remaining.fat.toFixed(1)} g de grasa antes de agregarla.</p><button class="add-food" onclick='openQuantityModal(${JSON.stringify(r)})'>Elegir cantidad y agregar</button></div>`}
+function aiPrompt(prompt){aiQuery.value=prompt;const p=prompt.toLowerCase();const t=totals();if(p.includes("qué me falta")||p.includes("completar mis macros")){const r=recommendations();aiOutput.innerHTML=renderRecommendationHTML(r);return}if(p.includes("cena")||p.includes("pre-entreno")||p.includes("post-entreno")||p.includes("receta")){const r=recipeSuggestion(prompt);aiOutput.innerHTML=renderRecipeHTML(r);return}if(p.includes("sustituciones")){aiOutput.innerHTML=renderSubstitutions();return}aiOutput.innerHTML=`<div class="ai-result"><b>✦ Análisis de tu día</b><p class="small">Llevas ${Math.round(t.cal)} kcal, ${t.pro.toFixed(1)} g de proteína, ${t.carb.toFixed(1)} g de carbohidratos y ${t.fat.toFixed(1)} g de grasa.</p><p class="small">${t.pro<data.goals.pro?"Te conviene priorizar proteína. ":"Tu proteína va bien. "}${t.cal<data.goals.cal?"Todavía tienes margen calórico para una comida equilibrada.":"Ya alcanzaste tu objetivo calórico."}</p></div>`}
+function recommendations(){const t=totals();return{cal:Math.max(0,data.goals.cal-t.cal),pro:Math.max(0,data.goals.pro-t.pro),carb:Math.max(0,data.goals.carb-t.carb),fat:Math.max(0,data.goals.fat-t.fat),foods:[allFoods().find(x=>x.name==="Pechuga de pollo"),allFoods().find(x=>x.name==="Yogur griego natural"),allFoods().find(x=>x.name==="Arroz blanco cocido")].filter(Boolean)}}
+function renderRecommendationHTML(r){return `<div class="ai-result"><b>🎯 Para completar tu día</b><p class="small">Aproximadamente <b>${Math.round(r.cal)} kcal</b>, <b>${r.pro.toFixed(1)} g</b> de proteína, <b>${r.carb.toFixed(1)} g</b> de carbohidratos y <b>${r.fat.toFixed(1)} g</b> de grasa disponibles.</p><div class="capability-list">${r.foods.map(f=>`<div><b>${f.name}</b><span>${f.cal} kcal · ${f.pro}g proteína · ${f.carb}g carbohidratos · ${f.fat}g grasa por ${f.serving}</span><button class="wide" onclick='openQuantityModal(${JSON.stringify(f)})'>Elegir cantidad</button></div>`).join("")}</div></div>`}
+function recipeSuggestion(prompt){const high=prompt.toLowerCase().includes("proteína");return{name:high?"Bowl de pollo y arroz":"Bowl equilibrado",ingredients:["150 g de pechuga de pollo","120 g de arroz cocido","100 g de verduras","30 g de aguacate"],steps:["Cocina el pollo con especias.","Calienta el arroz y las verduras.","Sirve y agrega el aguacate."],cal:Math.round(248+156+35+48),pro:46,carb:42,fat:9}}
+function renderRecipeHTML(r){return `<div class="ai-result"><b>🍽️ ${r.name}</b><p class="small"><b>Ingredientes:</b> ${r.ingredients.join(" · ")}</p><p class="small"><b>Preparación:</b> ${r.steps.join(" ")}</p><div class="result-stats"><div class="stat"><b>${r.cal}</b><span>kcal</span></div><div class="stat"><b>${r.pro}g</b><span>proteína</span></div><div class="stat"><b>${r.carb}g</b><span>carbohidratos</span></div><div class="stat"><b>${r.fat}g</b><span>grasas</span></div></div><button class="outline-btn" onclick="aiQuery.value='Analiza mi alimentación de hoy y dime qué puedo mejorar';aiPrompt(aiQuery.value)">Analizar mi día</button></div>`}
+function renderSubstitutions(){return `<div class="ai-result"><b>🔄 Sustituciones inteligentes</b><div class="capability-list"><div><b>Arroz blanco → papa cocida</b><span>Ambos aportan carbohidratos; la papa puede aportar más volumen por caloría.</span></div><div><b>Crema de cacahuate → yogur griego</b><span>Reduce grasas y aumenta proteína por volumen de comida.</span></div><div><b>Pan → tortilla de maíz</b><span>Útil cuando quieres controlar la porción y mantener carbohidratos.</span></div></div></div>`}
+function renderAIDashboard(){const t=totals();const p=pct(t.pro,data.goals.pro),c=pct(t.carb,data.goals.carb);aiDailyInsight.innerHTML=`<div class="glass-card"><span class="eyebrow">RESUMEN DE IA</span><h3>${t.cal<data.goals.cal?"Todavía tienes margen para comer":"Tu objetivo calórico ya está alcanzado"}</h3><p class="muted small">Proteína ${p}% · Carbohidratos ${c}% · ${t.pro<data.goals.pro?"Prioridad sugerida: proteína.":"Proteína en buen nivel."}</p></div>`}
+function openQuantityModal(food){pendingFood={...food};const p=parseServing(food.serving);const u=inferredUnit(food.serving);quantityModal.classList.add("show");renderQuantityModal(p?.qty||1,u)}
 function closeQuantityModal(){quantityModal.classList.remove("show");pendingFood=null}
-function quantityValues(){
-  const qty=Math.max(.01,parseFloat(qtyInput.value)||1);
-  const unit=qtyUnit.value;
-  const baseServing=pendingFood?.serving||"100 g";
-  let baseQty=1, baseUnit="portion";
-  const m=String(baseServing).match(/([\d.]+)\s*(g|ml|pieza|porción|portion|taza|cda|cdta)/i);
-  if(m){baseQty=parseFloat(m[1]);baseUnit=m[2].toLowerCase()}
-  const baseFactor=({g:1,ml:1,pieza:1,"porción":1,portion:1,taza:1,cda:1,cdta:1})[baseUnit]||1;
-  const requestedFactor=({g:qty/100,ml:qty/100,piece:qty,portion:qty,cup:qty,tbsp:qty/16,tsp:qty/48})[unit]||qty;
-  let factor=requestedFactor;
-  // Food database values are normally per 100 g/ml or per one portion/piece.
-  if(baseUnit==="g"||baseUnit==="ml") factor=requestedFactor;
-  else factor=requestedFactor/baseFactor;
-  return {qty,unit,cal:(pendingFood.cal||0)*factor,pro:(pendingFood.pro||0)*factor,carb:(pendingFood.carb||0)*factor,fat:(pendingFood.fat||0)*factor,fiber:(pendingFood.fiber||0)*factor};
-}
-function renderQuantityModal(qty=1,unit="portion"){
-  quantityContent.innerHTML=`
-    <span class="eyebrow">CANTIDAD CONSUMIDA</span>
-    <h2 style="margin:5px 0">¿Cuánto comiste?</h2>
-    <div class="qty-product"><div class="qty-icon">🥗</div><div><b>${pendingFood.name}</b><div class="muted small">Ajusta la cantidad para calcular los macros exactos de esta entrada.</div></div></div>
-    <div class="qty-fields">
-      <label>Cantidad<input id="qtyInput" type="number" min=".01" step=".1" value="${qty}"></label>
-      <label>Unidad<select id="qtyUnit">
-        <option value="g" ${unit==="g"?"selected":""}>Gramos (g)</option>
-        <option value="ml" ${unit==="ml"?"selected":""}>Mililitros (ml)</option>
-        <option value="portion" ${unit==="portion"?"selected":""}>Porción</option>
-        <option value="piece" ${unit==="piece"?"selected":""}>Pieza</option>
-        <option value="cup" ${unit==="cup"?"selected":""}>Taza</option>
-        <option value="tbsp" ${unit==="tbsp"?"selected":""}>Cucharada</option>
-        <option value="tsp" ${unit==="tsp"?"selected":""}>Cucharadita</option>
-      </select></label>
-    </div>
-    <div id="liveMacroBox"></div>
-    <label class="small muted">Agregar a
-      <select id="qtyMeal" class="full-input" style="margin-top:5px">
-        ${["Desayuno","Colación","Comida","Pre-entreno","Post-entreno","Cena"].map(m=>`<option ${m===aiMeal.value?"selected":""}>${m}</option>`).join("")}
-      </select>
-    </label>
-    <button class="confirm-add" onclick="confirmQuantity()">✓ CONFIRMAR Y AGREGAR</button>`;
-  qtyInput.addEventListener("input",updateLiveMacros);
-  qtyUnit.addEventListener("change",updateLiveMacros);
-  updateLiveMacros();
-}
-function updateLiveMacros(){
-  if(!pendingFood||!document.getElementById("qtyInput"))return;
-  const v=quantityValues();
-  liveMacroBox.innerHTML=`<div class="live-macros">
-    <div class="live-macro"><b>${Math.round(v.cal)}</b><span>kcal</span></div>
-    <div class="live-macro"><b>${v.pro.toFixed(1)} g</b><span>proteína</span></div>
-    <div class="live-macro"><b>${v.carb.toFixed(1)} g</b><span>carbohidratos</span></div>
-    <div class="live-macro"><b>${v.fat.toFixed(1)} g</b><span>grasas</span></div>
-  </div>`;
-}
-function confirmQuantity(){
-  if(!pendingFood)return;
-  const v=quantityValues();
-  const d=day();
-  d.items.push({...pendingFood,uid:Date.now(),meal:qtyMeal.value,serving:`${v.qty} ${unitName(v.unit)}`,cal:v.cal,pro:v.pro,carb:v.carb,fat:v.fat,fiber:(pendingFood.fiber||0)*(v.cal/(pendingFood.cal||1))});
-  data.logs[today()]=d;save();closeQuantityModal();renderDashboard();toast("Cantidad agregada a "+qtyMeal.value);
-}
+function quantityValues(){const qty=Math.max(.01,parseFloat(qtyInput.value)||1),unit=qtyUnit.value,k=factorFor(pendingFood,qty,unit);return{qty,unit,cal:(pendingFood.cal||0)*k,pro:(pendingFood.pro||0)*k,carb:(pendingFood.carb||0)*k,fat:(pendingFood.fat||0)*k,fiber:(pendingFood.fiber||0)*k}}
+function renderQuantityModal(qty=1,unit="portion"){quantityContent.innerHTML=`<span class="eyebrow">PASO OBLIGATORIO</span><h2 style="margin:5px 0">Selecciona cuánto consumiste</h2><div class="qty-product"><div class="qty-icon">🥗</div><div><b>${pendingFood.name}</b><div class="muted small">Antes de agregar cualquier producto debes indicar la cantidad o porción.</div></div></div><div class="qty-fields"><label>Cantidad<input id="qtyInput" type="number" min=".01" step=".1" value="${qty}"></label><label>Unidad<select id="qtyUnit"><option value="g" ${unit==="g"?"selected":""}>Gramos (g)</option><option value="ml" ${unit==="ml"?"selected":""}>Mililitros (ml)</option><option value="portion" ${unit==="portion"?"selected":""}>Porción</option><option value="piece" ${unit==="piece"?"selected":""}>Pieza</option><option value="cup" ${unit==="cup"?"selected":""}>Taza</option><option value="tbsp" ${unit==="tbsp"?"selected":""}>Cucharada</option><option value="tsp" ${unit==="tsp"?"selected":""}>Cucharadita</option></select></label></div><div class="preset-row"><button class="preset" onclick="setQty(.5)">½</button><button class="preset" onclick="setQty(1)">1</button><button class="preset" onclick="setQty(1.5)">1½</button><button class="preset" onclick="setQty(2)">2</button><button class="preset" onclick="setQty(3)">3</button></div><div id="liveMacroBox"></div><label class="small muted">Agregar a<select id="qtyMeal" class="full-input" style="margin-top:5px">${["Desayuno","Colación","Comida","Pre-entreno","Post-entreno","Cena"].map(m=>`<option>${m}</option>`).join("")}</select></label><div class="qty-note">Los valores mostrados se recalculan inmediatamente según la cantidad seleccionada.</div><button class="confirm-add" onclick="confirmQuantity()">✓ CONFIRMAR Y AGREGAR</button>`;qtyInput.addEventListener("input",updateLiveMacros);qtyUnit.addEventListener("change",updateLiveMacros);updateLiveMacros()}
+function setQty(v){qtyInput.value=v;updateLiveMacros()}
+function updateLiveMacros(){if(!pendingFood||!document.getElementById("qtyInput"))return;const v=quantityValues();liveMacroBox.innerHTML=`<div class="live-macros"><div class="live-macro"><b>${Math.round(v.cal)}</b><span>kcal</span></div><div class="live-macro"><b>${v.pro.toFixed(1)} g</b><span>proteína</span></div><div class="live-macro"><b>${v.carb.toFixed(1)} g</b><span>carbohidratos</span></div><div class="live-macro"><b>${v.fat.toFixed(1)} g</b><span>grasas</span></div></div>`}
+function confirmQuantity(){if(!pendingFood)return;const v=quantityValues();const d=day();d.items.push({...pendingFood,uid:Date.now(),meal:qtyMeal.value,serving:`${v.qty} ${unitName(v.unit)}`,cal:v.cal,pro:v.pro,carb:v.carb,fat:v.fat,fiber:v.fiber});data.logs[today()]=d;save();closeQuantityModal();renderDashboard();renderAIDashboard();toast("Cantidad agregada a "+qtyMeal.value)}
 function openModal(){modal.classList.add("show")}function closeModal(){modal.classList.remove("show")}
-function openFoodModal(){openModal();modalContent.innerHTML=`<h2>Crear alimento</h2><div class="form-grid">${["Nombre","Porción","Calorías","Proteína","Carbohidratos","Grasas"].map((x,i)=>`<label>${x}<input id="m${i}" type="${i>1?"number":"text"}"></label>`).join("")}</div><button class="wide green-btn" onclick="saveCustomFood()">GUARDAR</button>`}
-function saveCustomFood(){const f={id:"c"+Date.now(),name:m0.value,serving:m1.value||"1 porción",cal:+m2.value||0,pro:+m3.value||0,carb:+m4.value||0,fat:+m5.value||0,fiber:0};if(!f.name)return toast("Falta el nombre");data.foods.push(f);save();closeModal();openQuantityModal(f)}
+function openFoodModal(){openModal();modalContent.innerHTML=`<h2>Agregar producto</h2><p class="muted small">Selecciona un producto. Después te pediremos obligatoriamente la cantidad antes de registrarlo.</p><input id="foodSearch" class="full-input" placeholder="Buscar pollo, arroz, huevo…" oninput="renderFoodChoices()"><div id="foodChoices" style="margin-top:10px"></div>`;renderFoodChoices()}
+function renderFoodChoices(){const q=(document.getElementById("foodSearch")?.value||"").toLowerCase();const arr=allFoods().filter(f=>f.name.toLowerCase().includes(q)).slice(0,18);foodChoices.innerHTML=arr.map(f=>`<button class="food-choice" onclick='closeModal();openQuantityModal(${JSON.stringify(f)})'><span><b>${f.name}</b><small>${f.serving} · ${f.cal} kcal base</small></span><strong>›</strong></button>`).join("")||`<p class="muted small">No encontrado. Puedes crear un alimento personalizado.</p><button class="wide green-btn" onclick="openCustomFromSearch()">Crear alimento</button>`}
+function openCustomFromSearch(){openModal();openFoodModal();modalContent.innerHTML=`<h2>Crear alimento</h2><div class="form-grid">${["Nombre","Porción base","Calorías","Proteína","Carbohidratos","Grasas","Fibra"].map((x,i)=>`<label>${x}<input id="m${i}" type="${i>1?"number":"text"}"></label>`).join("")}</div><button class="wide green-btn" onclick="saveCustomFood()">GUARDAR Y ELEGIR CANTIDAD</button>`}
+function saveCustomFood(){const f={id:"c"+Date.now(),name:m0.value.trim(),serving:m1.value||"100 g",cal:+m2.value||0,pro:+m3.value||0,carb:+m4.value||0,fat:+m5.value||0,fiber:+m6.value||0};if(!f.name)return toast("Falta el nombre");data.foods.push(f);save();closeModal();openQuantityModal(f)}
 function openExerciseModal(){openModal();modalContent.innerHTML=`<h2>Nuevo ejercicio</h2><div class="form-grid"><label>Ejercicio<input id="en" placeholder="Ej. Prensa de pierna"></label><label>Músculo<input id="em" placeholder="Pierna"></label></div><button class="wide green-btn" onclick="saveExercise()">GUARDAR</button>`}
 function saveExercise(){if(!en.value)return toast("Falta el nombre");data.exercises.push({id:"e"+Date.now(),name:en.value,muscle:em.value||"General"});save();closeModal();renderTraining()}
 function renderTraining(){exerciseSelect.innerHTML=data.exercises.map(e=>`<option value="${e.id}">${e.name} · ${e.muscle}</option>`).join("");exerciseLibrary.innerHTML=data.exercises.map(e=>`<div class="exercise-item"><span><b>${e.name}</b><small class="muted"> · ${e.muscle}</small></span><span class="muted small">${bestFor(e.id)}</span></div>`).join("");renderWorkout()}
 function addExercise(){const e=data.exercises.find(x=>x.id===exerciseSelect.value);if(!e)return;workout.push({id:e.id,name:e.name,muscle:e.muscle,weight:+exWeight.value||0,reps:+exReps.value||0,sets:1});renderWorkout()}
 function renderWorkout(){workoutRows.innerHTML=workout.length?workout.map((x,i)=>`<div class="work-row"><div><b>${x.name}</b><small class="muted">${x.muscle}</small></div><input type="number" value="${x.weight}" placeholder="kg" onchange="workout[${i}].weight=+this.value"><input type="number" value="${x.reps}" placeholder="reps" onchange="workout[${i}].reps=+this.value"><button class="delete" onclick="workout.splice(${i},1);renderWorkout()">×</button></div>`).join(""):`<p class="muted small">Agrega ejercicios a tu sesión.</p>`}
-function volume(x){return x.weight*x.reps*x.sets}
-function previous(id){for(let i=data.workouts.length-1;i>=0;i--){const x=data.workouts[i].exercises.find(y=>y.id===id);if(x)return x}return null}
-function compare(x){const p=previous(x.id);if(!p)return["up","PRIMERA VEZ"];const a=volume(x),b=volume(p);if(a>b)return["up","MEJORASTE"];if(a<b)return["down","BAJASTE"];return["same","TE MANTUVISTE"]}
-function finishWorkout(){if(!workout.length)return toast("Agrega ejercicios");const w={id:Date.now(),date:today(),name:workoutName.value||"Entrenamiento",duration:+workoutDuration.value||0,exercises:workout.map(x=>({...x}))};data.workouts.push(w);save();sessionResult.innerHTML=`<div class="glass-card"><span class="eyebrow">RESULTADO</span><h2>Sesión completada ✓</h2>${w.exercises.map(x=>{const c=compare(x);return `<div class="row" style="padding:9px 0;border-top:1px solid #ffffff0b"><span>${x.name}<small class="muted">${x.weight} kg · ${x.reps} reps</small></span><span class="status ${c[0]}">${c[1]}</span></div>`}).join("")}</div>`;workout=[];renderTraining();toast("Entrenamiento guardado")}
-function bestFor(id){let a=data.workouts.flatMap(w=>w.exercises.filter(x=>x.id===id));if(!a.length)return"Sin registros";const b=a.reduce((m,x)=>Math.max(m,volume(x)),0);return b+" kg·reps"}
+function volume(x){return x.weight*x.reps*x.sets}function previous(id){for(let i=data.workouts.length-1;i>=0;i--){const x=data.workouts[i].exercises.find(y=>y.id===id);if(x)return x}return null}function compare(x){const p=previous(x.id);if(!p)return["up","PRIMERA VEZ"];const a=volume(x),b=volume(p);return a>b?["up","MEJORASTE"]:a<b?["down","BAJASTE"]:["same","TE MANTUVISTE"]}
+function finishWorkout(){if(!workout.length)return toast("Agrega ejercicios");const w={id:Date.now(),date:today(),name:workoutName.value||"Entrenamiento",duration:+workoutDuration.value||0,exercises:workout.map(x=>({...x}))};data.workouts.push(w);save();sessionResult.innerHTML=`<div class="glass-card"><span class="eyebrow">RESULTADO</span><h2>Sesión completada ✓</h2>${w.exercises.map(x=>{const c=compare(x);return `<div class="row" style="padding:9px 0;border-top:1px solid #edf1ee"><span>${x.name}<small class="muted">${x.weight} kg · ${x.reps} reps</small></span><span class="status ${c[0]}">${c[1]}</span></div>`}).join("")}</div>`;workout=[];renderTraining();toast("Entrenamiento guardado")}
+function bestFor(id){let a=data.workouts.flatMap(w=>w.exercises.filter(x=>x.id===id));if(!a.length)return"Sin registros";return a.reduce((m,x)=>Math.max(m,volume(x)),0)+" kg·reps"}
 function renderProgress(){const total=data.workouts.length,improved=data.workouts.reduce((n,w)=>n+w.exercises.filter(x=>compare(x)[0]==="up"&&previous(x.id)).length,0),last=data.workouts.at(-1);progressSummary.innerHTML=`<div class="summary"><span class="muted small">SESIONES</span><b>${total}</b></div><div class="summary"><span class="muted small">MEJORAS</span><b>${improved}</b></div><div class="summary"><span class="muted small">ÚLTIMA</span><b>${last?new Date(last.date+"T12:00").toLocaleDateString("es-MX",{day:"2-digit",month:"short"}):"—"}</b></div>`;historyList.innerHTML=[...data.workouts].reverse().map(w=>`<div class="history"><div class="row"><b>${w.name}</b><span class="muted small">${new Date(w.date+"T12:00").toLocaleDateString("es-MX")}</span></div>${w.exercises.map(x=>{const c=compare(x);return `<div class="row" style="margin-top:9px"><span class="small">${x.name} · ${x.weight}kg × ${x.reps}</span><span class="status ${c[0]}">${c[1]}</span></div>`}).join("")}</div>`).join("")||`<div class="glass-card muted">Aún no tienes historial.</div>`}
-function renderSettings(){goalForm.innerHTML=[["cal","Calorías"],["pro","Proteína (g)"],["carb","Carbohidratos (g)"],["fat","Grasas (g)"]].map(x=>`<label>${x[1]}<input id="g_${x[0]}" type="number" value="${data.goals[x[0]]}"></label>`).join("");aiEndpoint.value=data.endpoint||"";endpointStatus.textContent=data.endpoint?"Backend configurado":"Modo local activo"}
-function saveGoals(){for(const k of["cal","pro","carb","fat"])data.goals[k]=+document.getElementById("g_"+k).value||0;save();renderDashboard();toast("Objetivos guardados")}
-function saveEndpoint(){data.endpoint=aiEndpoint.value.trim();save();endpointStatus.textContent=data.endpoint?"Backend configurado":"Modo local activo";toast("Conexión guardada")}
-function resetDay(){if(confirm("¿Borrar los alimentos de hoy?")){delete data.logs[today()];save();renderDashboard();toast("Día reiniciado")}}
+function renderSettings(){goalForm.innerHTML=[["cal","Calorías"],["pro","Proteína (g)"],["carb","Carbohidratos (g)"],["fat","Grasas (g)" ]].map(x=>`<label>${x[1]}<input id="g_${x[0]}" type="number" value="${data.goals[x[0]]}"></label>`).join("");aiEndpoint.value=data.endpoint||"";endpointStatus.textContent=data.endpoint?"Backend configurado":"Modo local activo";aiModeTitle.textContent=data.endpoint?"IA conectada":"Modo local inteligente";aiModeText.textContent=data.endpoint?"NutriAI intentará usar tu backend seguro para interpretar alimentos y comidas libres.":"La app incluye estimaciones locales y herramientas de nutrición. Conecta un backend seguro para IA generativa."}
+function saveGoals(){for(const k of ["cal","pro","carb","fat"])data.goals[k]=+document.getElementById("g_"+k).value||0;save();renderDashboard();renderAIDashboard();toast("Objetivos guardados")}
+function saveEndpoint(){data.endpoint=aiEndpoint.value.trim();save();renderSettings();toast("Conexión guardada")}
+function resetDay(){if(confirm("¿Borrar los alimentos de hoy?")){delete data.logs[today()];save();renderDashboard();renderAIDashboard();toast("Día reiniciado")}}
 function exportData(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="gymtrack-respaldo.json";a.click()}
 function clearAll(){if(confirm("¿Borrar todos los datos?")){localStorage.removeItem(KEY);location.reload()}}
 function openSettings(){showScreen("settings")}
-renderDashboard();renderTraining();renderProgress();renderSettings();
+renderDashboard();renderTraining();renderProgress();renderSettings();renderAIDashboard();

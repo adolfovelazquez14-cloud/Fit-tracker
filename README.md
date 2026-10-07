@@ -1,38 +1,23 @@
-# GymTrack v2
+# GymTrack v3 — NutriAI + Cantidad obligatoria
 
-## Qué cambió
-- Interfaz nueva estilo Liquid Glass, negro/blanco/verde.
-- Dashboard móvil con anillo de calorías y macros.
-- NutriAI con cantidades y unidades: gramos, ml, porción, pieza, taza, cucharada y cucharadita.
-- Registro de comidas.
-- Entrenamiento con peso/repeticiones y comparación.
-- Historial y progreso.
-- Datos guardados en `localStorage`.
+Versión mobile-first para GitHub Pages.
+
+## Cambios principales
+- Interfaz blanca con texto negro y verde como color de acento.
+- Ningún producto se agrega directamente: siempre se abre el selector de cantidad.
+- Cantidades en gramos, mililitros, porción, pieza, taza, cucharada y cucharadita.
+- Macros recalculados en tiempo real.
+- Buscador de productos y creación de alimentos personalizados.
+- NutriAI ahora tiene una sección completa con análisis, recomendaciones, recetas, pre/post-entreno, sustituciones y auditoría del día.
+- Seguimiento de entrenamiento y progreso.
+- Datos guardados en localStorage.
 
 ## IA real
-GitHub Pages solo sirve archivos estáticos. Para que NutriAI analice cualquier platillo con un modelo de IA necesitas un backend seguro.
+GitHub Pages no debe contener claves privadas. Para IA generativa real configura un backend seguro en Ajustes y usa `api-food.example.js` como referencia.
 
-La app acepta un endpoint en **Ajustes → Conexión NutriAI**.
-
-El frontend envía:
+Respuesta esperada del backend:
 ```json
-{"query":"3 tacos de bistec con queso","quantity":1,"unit":"portion"}
+{"name":"Tacos de bistec","serving":"1 porción","cal":650,"pro":38,"carb":55,"fat":28,"fiber":5}
 ```
 
-El backend debe devolver:
-```json
-{
-  "name":"Tacos de bistec con queso",
-  "serving":"1 porción",
-  "cal":650,
-  "pro":38,
-  "carb":55,
-  "fat":28,
-  "fiber":5
-}
-```
-
-**No coloques una API key de OpenAI en `index.html` o `app.js`.** Si quieres IA real, usa un Worker/Function con la clave como secreto.
-
-## Selector de cantidad
-Al seleccionar un alimento/resultado de NutriAI, se abre una ventana donde eliges cantidad y unidad. Los macros se recalculan en tiempo real antes de confirmar.
+Abre `index.html` para probarlo o súbelo a un repositorio de GitHub Pages.

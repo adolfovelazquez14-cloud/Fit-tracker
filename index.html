@@ -1,93 +1,52 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#050705">
-<title>GymTrack — Smart Fitness</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff"><title>GymTrack — Smart Fitness</title><link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="ambient a1"></div><div class="ambient a2"></div>
 <div class="app">
-<header class="topbar">
-  <div class="logo"><div class="logo-mark">G</div><div><b>GYMTRACK</b><span>SMART FITNESS</span></div></div>
-  <button class="round" onclick="openSettings()">⚙</button>
-</header>
-
+<header class="topbar"><div class="logo"><div class="logo-mark">G</div><div><b>GYMTRACK</b><span>SMART FITNESS</span></div></div><button class="round" onclick="openSettings()">⚙</button></header>
 <main>
 <section id="dashboard" class="screen active">
-  <div class="hero row">
-    <div><span class="eyebrow">TU DÍA</span><h1 id="dateTitle">Hoy</h1><p id="dateSub" class="muted"></p></div>
-    <button class="pill green" onclick="resetDay()">↻ Reiniciar</button>
-  </div>
-
-  <div class="hero-glass">
-    <div class="ring" id="calRing"><div><strong id="calValue">0</strong><span>kcal</span></div></div>
-    <div class="hero-copy"><span class="eyebrow">CALORÍAS</span><h2><span id="calGoal">2500</span> kcal objetivo</h2><p id="calRemain">Te quedan 2500 kcal</p></div>
-  </div>
-
-  <div class="macro-grid" id="macroGrid"></div>
-
-  <div class="section-head"><div><span class="eyebrow">NUTRICIÓN</span><h2>Agregar comida</h2></div></div>
-  <div class="ai-panel">
-    <div class="ai-title"><div class="spark">✦</div><div><b>NutriAI</b><span>Analiza lo que comiste</span></div><span class="online">● LISTO</span></div>
-    <div class="ai-input-wrap"><input id="aiQuery" placeholder="Ej. 3 tacos de bistec con queso y salsa"><button onclick="analyzeFood()">Analizar</button></div>
-    <div class="ai-controls">
-      <label>Cantidad<input id="aiQty" type="number" value="1" min=".1" step=".1"></label>
-      <label>Unidad<select id="aiUnit"><option value="portion">Porción</option><option value="g">Gramos</option><option value="ml">Mililitros</option><option value="piece">Pieza</option><option value="cup">Taza</option><option value="tbsp">Cucharada</option><option value="tsp">Cucharadita</option></select></label>
-      <label>Comida<select id="aiMeal"><option>Desayuno</option><option>Colación</option><option selected>Comida</option><option>Pre-entreno</option><option>Post-entreno</option><option>Cena</option></select></label>
-    </div>
-    <div id="aiOutput"></div>
-  </div>
-
-  <div class="section-head"><div><span class="eyebrow">REGISTRO</span><h2>Mis comidas</h2></div><button class="round small" onclick="openFoodModal()">＋</button></div>
-  <div id="mealList"></div>
+ <div class="hero row"><div><span class="eyebrow">TU DÍA</span><h1 id="dateTitle">Hoy</h1><p id="dateSub" class="muted"></p></div><button class="pill green" onclick="resetDay()">↻ Reiniciar</button></div>
+ <div class="hero-card"><div class="ring" id="calRing"><div><strong id="calValue">0</strong><span>kcal</span></div></div><div><span class="eyebrow">CALORÍAS</span><h2><span id="calGoal">2500</span> kcal objetivo</h2><p id="calRemain" class="muted">Te quedan 2500 kcal</p></div></div>
+ <div class="macro-grid" id="macroGrid"></div>
+ <div class="section-head"><div><span class="eyebrow">NUTRIACIÓN INTELIGENTE</span><h2>Analiza una comida</h2></div><button class="round small green-outline" onclick="showScreen('ai')">IA</button></div>
+ <div class="quick-ai"><div class="ai-badge">✦</div><div class="quick-ai-copy"><b>NutriAI</b><span>Describe lo que comiste y obtén un análisis nutricional.</span></div><button onclick="showScreen('ai')">Abrir</button></div>
+ <div class="section-head"><div><span class="eyebrow">REGISTRO</span><h2>Mis comidas</h2></div><button class="round small green-outline" onclick="openFoodModal()">＋</button></div><div id="mealList"></div>
 </section>
 
-<section id="training" class="screen">
-  <div class="hero"><span class="eyebrow">ENTRENAMIENTO</span><h1>Tu sesión</h1><p class="muted">Registra cada serie y compara tu rendimiento.</p></div>
-  <div class="glass-card">
-    <div class="form-grid">
-      <label>Nombre<input id="workoutName" value="Entrenamiento"></label>
-      <label>Duración<input id="workoutDuration" type="number" placeholder="60"></label>
-    </div>
-    <div class="exercise-add">
-      <select id="exerciseSelect"></select><input id="exWeight" type="number" placeholder="kg" step=".5"><input id="exReps" type="number" placeholder="reps" value="10"><button onclick="addExercise()">＋</button>
-    </div>
-    <div id="workoutRows"></div>
-    <button class="wide green-btn" onclick="finishWorkout()">✓ FINALIZAR SESIÓN</button>
-  </div>
-  <div id="sessionResult"></div>
-  <div class="section-head"><div><span class="eyebrow">EJERCICIOS</span><h2>Biblioteca</h2></div><button class="round small" onclick="openExerciseModal()">＋</button></div>
-  <div id="exerciseLibrary" class="library"></div>
+<section id="ai" class="screen">
+ <div class="hero"><span class="eyebrow">NUTRIAI</span><h1>Tu asistente nutricional</h1><p class="muted">Analiza alimentos, comidas completas y tu progreso del día.</p></div>
+ <div class="ai-main-card">
+  <div class="ai-header"><div class="ai-badge large">✦</div><div><b>NutriAI</b><span>Asistente inteligente</span></div><span class="ai-status">● ACTIVO</span></div>
+  <label class="search-label">¿Qué comiste o qué quieres analizar?<textarea id="aiQuery" rows="3" placeholder="Ej. 3 tacos de bistec con queso, cebolla, cilantro y salsa"></textarea></label>
+  <div class="ai-actions"><button class="green-btn" onclick="analyzeFood()">✦ Analizar comida</button><button class="outline-btn" onclick="aiPrompt('¿Qué me falta para cumplir mis macros de hoy?')">Ver qué me falta</button></div>
+  <div id="aiOutput"></div>
+ </div>
+ <div id="aiDailyInsight"></div>
+ <div class="ai-section"><div class="section-head"><div><span class="eyebrow">RECOMENDACIONES</span><h2>¿Qué necesitas ahora?</h2></div></div><div class="ai-grid">
+  <button class="ai-action-card" onclick="aiPrompt('Recomiéndame alimentos para completar mis macros restantes hoy')"><b>Completar macros</b><span>Usa lo que te falta de proteína, carbohidratos y grasas.</span></button>
+  <button class="ai-action-card" onclick="aiPrompt('Dame una cena alta en proteína y ajustada a mis macros restantes')"><b>Crear una cena</b><span>Genera una opción práctica con cantidades.</span></button>
+  <button class="ai-action-card" onclick="aiPrompt('Dame una comida pre-entreno adecuada para mi día')"><b>Pre-entreno</b><span>Ideas según tu energía y objetivos.</span></button>
+  <button class="ai-action-card" onclick="aiPrompt('Dame una comida post-entreno alta en proteína')"><b>Post-entreno</b><span>Opciones para recuperar y alcanzar proteína.</span></button>
+  <button class="ai-action-card" onclick="aiPrompt('Analiza mi alimentación de hoy y dime qué puedo mejorar')"><b>Auditar mi día</b><span>Fortalezas, excesos y oportunidades.</span></button>
+  <button class="ai-action-card" onclick="aiPrompt('Dame sustituciones saludables para alimentos que estoy consumiendo')"><b>Sustituciones</b><span>Cambia alimentos sin perder el objetivo.</span></button>
+ </div></div>
+ <div class="ai-section"><div class="section-head"><div><span class="eyebrow">HERRAMIENTAS</span><h2>NutriAI también puede</h2></div></div><div class="capability-list">
+  <div><b>📊 Analizar macros</b><span>Calorías, proteína, carbohidratos, grasas y fibra.</span></div><div><b>🍽️ Crear recetas</b><span>Ingredientes, cantidades, preparación y macros estimados.</span></div><div><b>🔄 Comparar alimentos</b><span>Encuentra alternativas con perfiles nutricionales similares.</span></div><div><b>🎯 Ajustarse a tu objetivo</b><span>Considera tus metas configuradas y lo que ya consumiste.</span></div><div><b>🏋️ Nutrición deportiva</b><span>Ideas para antes y después del entrenamiento.</span></div><div><b>🧾 Explicar resultados</b><span>Te dice por qué una recomendación puede convenirte.</span></div>
+ </div></div>
+ <div class="glass-card"><span class="eyebrow">ESTADO DE IA</span><h3 id="aiModeTitle">Modo local inteligente</h3><p id="aiModeText" class="muted small">La versión de GitHub Pages funciona con una base local. Para IA generativa real puedes conectar un backend seguro desde Ajustes.</p></div>
 </section>
 
-<section id="progress" class="screen">
-  <div class="hero"><span class="eyebrow">PROGRESO</span><h1>Tu evolución</h1><p class="muted">Cada entrenamiento cuenta.</p></div>
-  <div id="progressSummary" class="progress-summary"></div>
-  <div id="historyList"></div>
-</section>
-
-<section id="settings" class="screen">
-  <div class="hero"><span class="eyebrow">CONFIGURACIÓN</span><h1>Objetivos</h1><p class="muted">Ajusta tus metas diarias.</p></div>
-  <div class="glass-card"><div class="form-grid" id="goalForm"></div><button class="wide green-btn" onclick="saveGoals()">GUARDAR OBJETIVOS</button></div>
-  <div class="glass-card"><h3>Conexión NutriAI</h3><p class="muted small">GitHub Pages no puede ocultar una clave de API. Introduce aquí la URL de tu backend seguro para usar IA real.</p><input id="aiEndpoint" class="full-input" placeholder="https://tu-backend.com/api/food"><button class="wide" onclick="saveEndpoint()">Guardar conexión</button><p id="endpointStatus" class="small muted"></p></div>
-  <div class="glass-card"><h3>Datos</h3><button class="wide" onclick="exportData()">Exportar respaldo JSON</button><button class="wide danger-btn" onclick="clearAll()">Borrar todos los datos</button></div>
-</section>
+<section id="training" class="screen"><div class="hero"><span class="eyebrow">ENTRENAMIENTO</span><h1>Tu sesión</h1><p class="muted">Registra cada serie y compara tu rendimiento.</p></div><div class="glass-card"><div class="form-grid"><label>Nombre<input id="workoutName" value="Entrenamiento"></label><label>Duración<input id="workoutDuration" type="number" placeholder="60"></label></div><div class="exercise-add"><select id="exerciseSelect"></select><input id="exWeight" type="number" placeholder="kg" step=".5"><input id="exReps" type="number" placeholder="reps" value="10"><button onclick="addExercise()">＋</button></div><div id="workoutRows"></div><button class="wide green-btn" onclick="finishWorkout()">✓ FINALIZAR SESIÓN</button></div><div id="sessionResult"></div><div class="section-head"><div><span class="eyebrow">EJERCICIOS</span><h2>Biblioteca</h2></div><button class="round small green-outline" onclick="openExerciseModal()">＋</button></div><div id="exerciseLibrary" class="library"></div></section>
+<section id="progress" class="screen"><div class="hero"><span class="eyebrow">PROGRESO</span><h1>Tu evolución</h1><p class="muted">Cada entrenamiento cuenta.</p></div><div id="progressSummary" class="progress-summary"></div><div id="historyList"></div></section>
+<section id="settings" class="screen"><div class="hero"><span class="eyebrow">CONFIGURACIÓN</span><h1>Objetivos</h1><p class="muted">Ajusta tus metas diarias y la conexión de IA.</p></div><div class="glass-card"><div class="form-grid" id="goalForm"></div><button class="wide green-btn" onclick="saveGoals()">GUARDAR OBJETIVOS</button></div><div class="glass-card"><h3>Conexión NutriAI</h3><p class="muted small">Nunca coloques una clave de API en este archivo. Usa un backend seguro.</p><input id="aiEndpoint" class="full-input" placeholder="https://tu-backend.com/api/food"><button class="wide" onclick="saveEndpoint()">Guardar conexión</button><p id="endpointStatus" class="small muted"></p></div><div class="glass-card"><h3>Datos</h3><button class="wide" onclick="exportData()">Exportar respaldo JSON</button><button class="wide danger-btn" onclick="clearAll()">Borrar todos los datos</button></div></section>
 </main>
-
-<nav class="bottom-nav">
-<button class="nav active" data-screen="dashboard">⌂<span>Inicio</span></button>
-<button class="nav" data-screen="training">♢<span>Entreno</span></button>
-<button class="nav" data-screen="progress">↗<span>Progreso</span></button>
-<button class="nav" data-screen="settings">⚙<span>Ajustes</span></button>
-</nav>
+<nav class="bottom-nav"><button class="nav active" data-screen="dashboard">⌂<span>Inicio</span></button><button class="nav" data-screen="ai">✦<span>NutriAI</span></button><button class="nav" data-screen="training">♢<span>Entreno</span></button><button class="nav" data-screen="progress">↗<span>Progreso</span></button><button class="nav" data-screen="settings">⚙<span>Ajustes</span></button></nav>
 </div>
-
 <div id="modal" class="modal"><div class="modal-box"><button class="modal-close" onclick="closeModal()">×</button><div id="modalContent"></div></div></div>
 <div id="quantityModal" class="modal"><div class="modal-box quantity-box"><button class="modal-close" onclick="closeQuantityModal()">×</button><div id="quantityContent"></div></div></div>
-<div id="toast" class="toast"></div>
-<script src="app.js"></script>
-</body>
-</html>
+<div id="toast" class="toast"></div><script src="app.js"></script>
+</body></html>
